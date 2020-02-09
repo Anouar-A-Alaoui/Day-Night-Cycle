@@ -21,15 +21,20 @@
 		<!--[if lt IE 7]>
 			<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="#">upgrade your browser</a> to improve your experience.</p>
 		<![endif]-->
-		<svg viewBox="-1 -1 2 2" style="transform: rotate(120deg)"></svg>
+		<svg viewBox="-1 -1 2 2" style="transform: rotate(120deg)">
+			<g id="myGroup1" ></g>
+		</svg>
 		<script>
-			const svgEl = document.querySelector('svg');
+			const xmlns = "http://www.w3.org/2000/svg";
+			const groupPie = createGroup("pieGroupe");
+			const svgEl = createSVGElement();
 			const slices = [
 				{ percent: 0.05, color: 'Coral' },
 				{ percent: 0.55, color: 'CornflowerBlue' },
 				{ percent: 0.1, color: 'red' },
 				{ percent: 0.3, color: 'black' },
 			];
+
 			let cumulativePercent = 0;
 
 			function getCoordinatesForPercent(percent) {
@@ -38,31 +43,69 @@
 				return [x, y];
 			}
 
-			slices.forEach(slice => {
-				// destructuring assignment sets the two variables at once
-				const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
-				
-				// each slice starts where the last slice ended, so keep a cumulative percent
-				cumulativePercent += slice.percent;
-				
-				const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
+			function initDraw(){
+				slices.forEach(slice => {
+					// destructuring assignment sets the two variables at once
+					const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
+	
+					// each slice starts where the last slice ended, so keep a cumulative percent
+					cumulativePercent += slice.percent;
+	
+					const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
+	
+					// if the slice is more than 50%, take the large arc (the long way around)
+					const largeArcFlag = slice.percent > .5 ? 1 : 0;
+	
+					// create an array and join it just for code readability
+					const pathData = [
+						`M ${startX} ${startY}`, // Move
+						`A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`, // Arc
+						`L 0 0`, // Line
+					].join(' ');
+	
+					// create a <path> and append it to the <svg> element
+					const pathEl = createPath(pathData,  slice.color);
+					groupPie.appendChild(pathEl);
+				});
+				svgEl.appendChild(groupPie)
+				const circles = createCircle(0.2,0,0);
+				const groupCircle = createGroup("groupCircle");
+				// groupCircle.setAttribute("id","groupCircle");
+				groupCircle.appendChild(circles);
+				svgEl.appendChild(groupCircle);
+			}
 
-				// if the slice is more than 50%, take the large arc (the long way around)
-				const largeArcFlag = slice.percent > .5 ? 1 : 0;
-
-				// create an array and join it just for code readability
-				const pathData = [
-					`M ${startX} ${startY}`, // Move
-					`A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`, // Arc
-					`L 0 0`, // Line
-				].join(' ');
-
-				// create a <path> and append it to the <svg> element
-				const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+			function createPath(pathData, color){
+				const pathEl = document.createElementNS(xmlns, 'path');
 				pathEl.setAttribute('d', pathData);
-				pathEl.setAttribute('fill', slice.color);
-				svgEl.appendChild(pathEl);
-			});
+				pathEl.setAttribute('fill', color);
+				return pathEl
+			}
+
+			function createGroup(_id){
+				const thisGroup = document.createElementNS(xmlns, "g");
+				thisGroup.setAttribute("id",_id);
+				return thisGroup
+			}
+
+			function createSVGElement(){
+				const svgEl = document.querySelector('svg');
+				svgEl.setAttribute("width", "300");
+				svgEl.setAttribute("height", "300");
+				return svgEl
+			}
+
+			function createCircle(r, x , y){
+				const circles = document.createElementNS(xmlns, "circle");
+				circles.setAttribute("r",r);
+				circles.setAttribute("cx",x);
+				circles.setAttribute("cy",y);
+				circles.setAttribute("fill",'white');
+				return circles
+			}
+
+			//initialize all the drawing here
+			initDraw()
 		</script>
 	</body>
 </html>
